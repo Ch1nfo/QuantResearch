@@ -162,6 +162,134 @@ python main.py strategy-backtest \
 | RSI | `--rsi-period` `--rsi-oversold` `--rsi-overbought` | 14 / 30 / 70 |
 | 定投 | `--dca-amount-per-buy` `--dca-frequency` `--dca-monthly-day` | 1000 / monthly / 1 |
 
+### 新增自定义技术策略
+
+当用户描述一个全新的技术策略想法时（例如"帮我加一个 ATR 通道突破策略"），直接改代码实现。新增一个策略需要修改 **两个文件**，共 7 个步骤。
+
+#### 架构概览
+
+每个策略有三层，所有策略共用底层回测引擎：
+
+```
+① 指标计算函数       calculate_xxx(frame, ...)  → 在 OHLCV 上加指标列
+② 信号生成逻辑       在 run_xxx_backtest() 内部   → 用指标列产出 buy/sell 布尔 Series
+③ 回测执行引擎      _apply_long_only_signals()  → 全部策略复用，不新增策略时不需要改
+```
+
+核心约定：策略只需要产出 `buy_signal` 和 `sell_signal` 两个 `pd.Series[bool]`，然后调用 `_apply_long_only_signals()`，仓位管理、净值计算、绩效指标全部自动处理。
+
+#### 7 步新增流程（以 ATR 通道突破为例）
+
+**步骤 ①：写指标计算函数** — 在 [technical_strategies.py](quantresearch/technical_strategies.py) 中新增：
+
+```python
+def calculate_atr_channel(
+    frame: pd.DataFrame,
+    period: int = 14,
+    multiplier: float = 2.0,
+) -> pd.DataFrame:
+    df = frame.copy()
+    df["trade_date"] = pd.to_datetime(df["trade_date"])
+    # True Range
+    high, low, close = df["high"], df["low"], df["close"]
+    prev_close = close.shift(1)
+    tr = pd.concat([high - low, (high - prev_close).abs(), (low - prev_close).abs()], axis=1).max(axis=1)
+    df["atr"] = tr.ewm(span=period, adjust=False, min_periods=period).mean()
+    # 通道
+    df["middle"] = close.rolling(window=period, min_periods=period).mean()
+    df["upper"] = df["middle"] + multiplier * df["atr"]
+    df["lower"] = df["middle"] - multiplier * df["atr"]
+    return df
+```
+
+**步骤 ②：写回测函数** — 同上文件：
+
+```python
+def run_atr_backtest(
+    frame: pd.DataFrame,
+    *,
+    period: int = 14,
+    multiplier: float = 2.0,
+    fee_rate: float = 0.0005,
+    initial_capital: float = 1.0,
+    engine: str = "auto",
+) -> pd.DataFrame:
+    df = calculate_atr_channel(frame, period=period, multiplier=multiplier)
+    prev_close = df["close"].shift(1)
+    prev_upper = df["upper"].shift(1)
+    prev_lower = df["lower"].shift(1)
+    # 突破上轨买入，跌破下轨卖出
+    buy_signal = (prev_close <= prev_upper) & (df["close"] > df["upper"])
+    sell_signal = (prev_close >= prev_lower) & (df["close"] < df["lower"])
+    return _apply_long_only_signals(
+        df, buy_signal=buy_signal.fillna(False), sell_signal=sell_signal.fillna(False),
+        fee_rate=fee_rate, initial_capital=initial_capital, engine=engine,
+        strategy_key="atr",
+    )
+```
+
+**步骤 ③：注册策略标签** — 在 `STRATEGY_REGISTRY` 字典中加一行：
+
+```python
+STRATEGY_REGISTRY: dict[str, StrategyDefinition] = {
+    ...
+    "atr": StrategyDefinition(key="atr", label="ATR通道"),  # 新增
+}
+```
+
+**步骤 ④：注册 vectorbt 引擎支持** — 如果是做多-only 策略（非定投类），把 key 加入：
+
+```python
+VECTORBT_STRATEGIES = {"kdj", "bollinger", "ma_cross", "macd", "rsi", "atr"}
+```
+
+**步骤 ⑤：添加路由分支** — 在 `run_strategy_backtest()` 函数中加一个 `if` 分支：
+
+```python
+if strategy == "atr":
+    return run_atr_backtest(
+        frame,
+        period=params.get("atr_period", 14),
+        multiplier=params.get("atr_multiplier", 2.0),
+        fee_rate=params.get("fee_rate", 0.0005),
+        initial_capital=params.get("initial_capital", 1.0),
+        engine=engine,
+    )
+```
+
+**步骤 ⑥：CLI 声明参数** — 在 [cli.py](quantresearch/cli.py) 的 strategy_backtest_parser 区域，挨着其他策略参数加：
+
+```python
+strategy_backtest_parser.add_argument("--atr-period", type=int, default=14)
+strategy_backtest_parser.add_argument("--atr-multiplier", type=float, default=2.0)
+```
+
+同时更新 `strategy-compare` / `strategy-search` 等 parser 中的 `--strategies choices` 列表，加入 `"atr"`。
+
+**步骤 ⑦：CLI 参数提取** — 在 `_strategy_params_from_args()` 函数返回的 dict 中加：
+
+```python
+"atr_period": getattr(args, "atr_period", 14),
+"atr_multiplier": getattr(args, "atr_multiplier", 2.0),
+```
+
+#### 完成后的效果
+
+用户可以直接用：
+
+```bash
+python main.py strategy-backtest --strategy atr \
+  --symbol 000300 --market CN --asset-type INDEX \
+  --start 2024-01-01 --end 2026-04-30 \
+  --atr-period 20 --atr-multiplier 2.5
+
+python main.py strategy-compare --strategies kdj macd atr ...
+python main.py strategy-search --symbol ...  # 自动包含 atr
+python main.py signal-snapshot --strategies kdj bollinger atr ...
+```
+
+所有已有功能（对比、搜索、信号快照、决策报告）自动支持新策略。
+
 ### 因子研究
 
 ```bash
