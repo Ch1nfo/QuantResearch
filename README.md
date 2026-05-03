@@ -62,10 +62,20 @@ python main.py --help
 
 ## Setup Expectations
 
-- Recommended environment: Python 3.12+ in your own virtual environment
-- Install dependencies with `pip install -r requirements.txt`
-- If qlib cannot expose `dump_bin.py` from the installed package, set `QLIB_REPO=/path/to/qlib` before running `refresh-qlib`
+- Recommended environment: Python 3.12+ in your own virtual environment or conda environment
+- Install dependencies: `pip install -r requirements.txt`
+- `dump_bin.py` (qlib's CSV-to-bin converter) is vendored at `vendor/qlib/scripts/dump_bin.py` — no need to clone the qlib repo separately. Dependencies are `fire`, `tqdm`, `loguru`, and `qlib.utils`, all covered by requirements.txt
 - `data/instruments.sample.csv` is only a starter sample; real research needs your own local universe and history
+
+### Smart qlib Dataset Refresh
+
+The `refresh_qlib()` function automatically detects whether the qlib `.bin` dataset needs rebuilding:
+- **Data already current** → skips rebuild entirely (< 0.1s)
+- **Data exists but has gaps** → incremental update (append-only, via `dump_update`)
+- **No data yet** → full build (via `dump_all`)
+- Use `--force-refresh-qlib` on analysis commands to force a full rebuild
+- Use `--skip-auto-refresh-qlib` to skip data preparation and use existing data as-is
+- `refresh-qlib` defaults to full rebuild; use `--incremental` for skip-or-update mode
 
 ## Using with Claude Code
 

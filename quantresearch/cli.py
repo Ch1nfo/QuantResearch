@@ -191,6 +191,8 @@ def build_parser() -> argparse.ArgumentParser:
     refresh_parser.add_argument("--end")
     refresh_parser.add_argument("--qlib-repo")
     refresh_parser.add_argument("--output-dir")
+    refresh_parser.add_argument("--incremental", action="store_true",
+                                help="增量更新模式（仅追加新数据，不清除已有数据集）")
 
     performance_parser = subparsers.add_parser("performance")
     performance_parser.add_argument("--source", choices=("remote", "db"), default="db")
@@ -263,6 +265,7 @@ def build_parser() -> argparse.ArgumentParser:
     strategy_backtest_parser.add_argument("--target-years", type=int, default=20)
     strategy_backtest_parser.add_argument("--refresh-recent-days", type=int, default=14)
     strategy_backtest_parser.add_argument("--skip-auto-refresh-qlib", action="store_true")
+    strategy_backtest_parser.add_argument("--force-refresh-qlib", action="store_true")
     strategy_backtest_parser.add_argument("--kdj-n", type=int, default=9)
     strategy_backtest_parser.add_argument("--kdj-signal-mode", choices=("cross", "extreme_cross"), default="extreme_cross")
     strategy_backtest_parser.add_argument("--oversold", type=float, default=20.0)
@@ -459,6 +462,7 @@ def build_parser() -> argparse.ArgumentParser:
     signal_parser.add_argument("--target-years", type=int, default=20)
     signal_parser.add_argument("--refresh-recent-days", type=int, default=14)
     signal_parser.add_argument("--skip-auto-refresh-qlib", action="store_true")
+    signal_parser.add_argument("--force-refresh-qlib", action="store_true")
     signal_parser.add_argument("--lookback-days", type=int, default=500)
     signal_parser.add_argument("--hide-names", action="store_true")
     signal_parser.add_argument("--fee-rate", type=float, default=0.0005)
@@ -593,6 +597,7 @@ def build_parser() -> argparse.ArgumentParser:
     factor_bt_parser.add_argument("--target-years", type=int, default=20)
     factor_bt_parser.add_argument("--refresh-recent-days", type=int, default=14)
     factor_bt_parser.add_argument("--skip-auto-refresh-qlib", action="store_true")
+    factor_bt_parser.add_argument("--force-refresh-qlib", action="store_true")
 
     factor_analyze_parser = subparsers.add_parser("factor-analyze")
     factor_analyze_parser.add_argument("--factor-name", required=True, help="因子名称")
@@ -613,6 +618,7 @@ def build_parser() -> argparse.ArgumentParser:
     factor_analyze_parser.add_argument("--target-years", type=int, default=20)
     factor_analyze_parser.add_argument("--refresh-recent-days", type=int, default=14)
     factor_analyze_parser.add_argument("--skip-auto-refresh-qlib", action="store_true")
+    factor_analyze_parser.add_argument("--force-refresh-qlib", action="store_true")
 
     factor_combine_parser = subparsers.add_parser("factor-combine")
     factor_combine_parser.add_argument("--factor-name", required=True, help="合成因子名称")
@@ -902,6 +908,7 @@ def main() -> None:
             end=args.end,
             qlib_repo=args.qlib_repo,
             output_dir=args.output_dir,
+            force=not args.incremental,
         )
         print(f"qlib 数据已刷新：{output}")
         return
@@ -1028,6 +1035,7 @@ def main() -> None:
             target_years=args.target_years,
             refresh_recent_days=args.refresh_recent_days,
             auto_prepare=not args.skip_auto_refresh_qlib,
+            force_refresh_qlib=args.force_refresh_qlib,
         )
         if frame.empty:
             raise SystemExit("没有读取到该标的在指定区间内的 OHLCV 数据。")
@@ -1307,6 +1315,7 @@ def main() -> None:
             target_years=args.target_years,
             refresh_recent_days=args.refresh_recent_days,
             auto_prepare=not args.skip_auto_refresh_qlib,
+            force_refresh_qlib=args.force_refresh_qlib,
             lookback_days=args.lookback_days,
         )
         output = args.output or str(default_signal_output(args.symbol, args.as_of))
@@ -1474,6 +1483,7 @@ def main() -> None:
             qlib_repo=args.qlib_repo,
             output_dir=args.output_dir,
             auto_prepare=not args.skip_auto_refresh_qlib,
+            force_refresh_qlib=args.force_refresh_qlib,
         )
         s = result.summary
         print(f"因子: {s['factor_name']}")

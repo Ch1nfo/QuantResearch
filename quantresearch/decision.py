@@ -37,6 +37,7 @@ def generate_decision_report(
     target_years: int = 20,
     refresh_recent_days: int = 14,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
     history_years: int = 2,
     risk_free_rate: float = 0.0,
 ) -> dict:
@@ -55,6 +56,7 @@ def generate_decision_report(
         target_years=target_years,
         refresh_recent_days=refresh_recent_days,
         auto_prepare=auto_prepare,
+        force_refresh_qlib=force_refresh_qlib,
     )
     signal_snapshot = build_signal_snapshot(
         frame=frame,

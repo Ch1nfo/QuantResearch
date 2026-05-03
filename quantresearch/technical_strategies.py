@@ -73,6 +73,7 @@ def load_qlib_ohlcv(
     target_years: int = 20,
     refresh_recent_days: int = 14,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
 ) -> pd.DataFrame:
     instrument = build_qlib_symbol(symbol, market)
     if auto_prepare:
@@ -85,6 +86,7 @@ def load_qlib_ohlcv(
             refresh_recent_days=refresh_recent_days,
             qlib_repo=qlib_repo,
             output_dir=output_dir,
+            force_refresh_qlib=force_refresh_qlib,
         )
     init_qlib(dataset_name)
     frame = D.features(

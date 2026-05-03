@@ -62,10 +62,20 @@ python main.py --help
 
 ## 环境预期
 
-- 推荐环境：Python 3.12+，使用你自己的虚拟环境
+- 推荐环境：Python 3.12+，使用你自己的虚拟环境或 conda 环境
 - 依赖安装方式：`pip install -r requirements.txt`
-- 如果已安装的 qlib 包里找不到 `dump_bin.py`，请先设置 `QLIB_REPO=/path/to/qlib` 再运行 `refresh-qlib`
+- `dump_bin.py`（qlib 的 CSV→.bin 转换脚本）已内置在 `vendor/qlib/scripts/dump_bin.py`，无需额外克隆 qlib 仓库。其依赖 `fire`、`tqdm`、`loguru`、`qlib.utils` 均已包含在 requirements.txt 中
 - `data/instruments.sample.csv` 只是起步样例，真实研究仍需要你自己维护标的池和历史数据
+
+### qlib 数据集智能刷新
+
+`refresh_qlib()` 会自动判断是否需要重建 qlib `.bin` 数据集：
+- **数据已覆盖** → 跳过重建（< 0.1 秒）
+- **数据存在但有缺口** → 增量更新（仅追加新日期，通过 `dump_update`）
+- **数据集不存在** → 全量构建（通过 `dump_all`）
+- 在分析命令中加 `--force-refresh-qlib` 可强制全量重建
+- 加 `--skip-auto-refresh-qlib` 可跳过数据准备，直接用已有数据
+- `refresh-qlib` 命令默认强制重建，加 `--incremental` 切换为跳过/增量模式
 
 ## 配合 Claude Code 使用
 

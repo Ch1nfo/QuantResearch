@@ -58,6 +58,7 @@ def analyze_factor(
     qlib_repo: Path | str | None = None,
     output_dir: Path | str | None = None,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
     preview_rows: int = 20,
 ) -> FactorAnalysisResult:
     _validate_params(universe, factor_name, expression, quantiles, forward_days, rebalance)
@@ -72,6 +73,7 @@ def analyze_factor(
         qlib_repo=qlib_repo,
         output_dir=output_dir,
         auto_prepare=auto_prepare,
+        force_refresh_qlib=force_refresh_qlib,
     )
 
     frame = D.features(universe, [expression, "$close"], start_time=start, end_time=end)
@@ -118,6 +120,7 @@ def combine_factors(
     qlib_repo: Path | str | None = None,
     output_dir: Path | str | None = None,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
     preview_rows: int = 20,
 ) -> FactorAnalysisResult:
     """将多个因子合成为一个复合因子并做完整分析。
@@ -154,6 +157,7 @@ def combine_factors(
         qlib_repo=qlib_repo,
         output_dir=output_dir,
         auto_prepare=auto_prepare,
+        force_refresh_qlib=force_refresh_qlib,
     )
 
     # 一次性拉取所有因子 + close
@@ -209,7 +213,8 @@ def combine_factors(
                 db_path=db_path, target_years=target_years,
                 refresh_recent_days=refresh_recent_days,
                 qlib_repo=qlib_repo, output_dir=output_dir,
-                auto_prepare=False, preview_rows=preview_rows,
+                auto_prepare=False, force_refresh_qlib=False,
+                preview_rows=preview_rows,
             )
             for fd in factor_defs
         ]

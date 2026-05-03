@@ -141,6 +141,32 @@ def update_daily(
     return _sync_history(db, "update-daily", start, end, symbol, market, asset_type)
 
 
+def _resolve_qlib_dir(output_dir: Optional[Path | str], dataset_name: str) -> Path:
+    from .constants import QLIB_DATA_DIR
+    return Path(output_dir) if output_dir else (QLIB_DATA_DIR / dataset_name)
+
+
+def _qlib_dataset_ready(qlib_dir: Path) -> bool:
+    features_dir = qlib_dir / "features"
+    instruments_file = qlib_dir / "instruments" / "all.txt"
+    return features_dir.exists() and any(features_dir.iterdir()) and instruments_file.exists()
+
+
+def _qlib_calendar_covers(qlib_dir: Path, end: Optional[str]) -> bool:
+    if not end:
+        return True
+    calendar_file = qlib_dir / "calendars" / "day.txt"
+    if not calendar_file.exists():
+        return False
+    try:
+        existing = pd.read_csv(calendar_file, header=None).iloc[:, 0].tolist()
+        if not existing:
+            return False
+        return pd.Timestamp(end) <= pd.Timestamp(max(existing))
+    except Exception:
+        return False
+
+
 def refresh_qlib(
     dataset_name: str = DEFAULT_DATASET_NAME,
     db_path: Path | str = DEFAULT_DB_PATH,
@@ -148,9 +174,33 @@ def refresh_qlib(
     output_dir: Optional[Path | str] = None,
     start: Optional[str] = None,
     end: Optional[str] = None,
+    force: bool = False,
 ) -> Path:
-    export_dataset_for_qlib(dataset_name=dataset_name, db_path=db_path, start=start, end=end, clean=True)
-    return build_qlib_bin(dataset_name=dataset_name, qlib_repo=qlib_repo, output_dir=output_dir, clean=True)
+    qlib_dir = _resolve_qlib_dir(output_dir, dataset_name)
+
+    if not force and _qlib_dataset_ready(qlib_dir):
+        if _qlib_calendar_covers(qlib_dir, end):
+            return qlib_dir
+
+        # 数据集存在但不覆盖请求的日期范围 → 增量更新
+        export_dataset_for_qlib(
+            dataset_name=dataset_name, db_path=db_path,
+            start=start, end=end, clean=False,
+        )
+        return build_qlib_bin(
+            dataset_name=dataset_name, qlib_repo=qlib_repo,
+            output_dir=output_dir, clean=False, mode="update",
+        )
+
+    # 数据集不存在或强制重建 → 全量构建
+    export_dataset_for_qlib(
+        dataset_name=dataset_name, db_path=db_path,
+        start=start, end=end, clean=True,
+    )
+    return build_qlib_bin(
+        dataset_name=dataset_name, qlib_repo=qlib_repo,
+        output_dir=output_dir, clean=True, mode="all",
+    )
 
 
 def _sync_history(

@@ -45,6 +45,7 @@ def backtest_factor_portfolio(
     qlib_repo: Path | str | None = None,
     output_dir: Path | str | None = None,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
 ) -> FactorPortfolioResult:
     """按因子值构建投资组合并回测。
 
@@ -72,6 +73,7 @@ def backtest_factor_portfolio(
         qlib_repo=qlib_repo,
         output_dir=output_dir,
         auto_prepare=auto_prepare,
+        force_refresh_qlib=force_refresh_qlib,
     )
 
     # 拉取因子值 + 收盘价

@@ -36,6 +36,7 @@ def generate_signal_snapshot(
     target_years: int = 20,
     refresh_recent_days: int = 14,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
     lookback_days: int = 500,
 ) -> dict:
     start = (datetime.fromisoformat(as_of).date() - timedelta(days=lookback_days)).isoformat()
@@ -52,6 +53,7 @@ def generate_signal_snapshot(
         target_years=target_years,
         refresh_recent_days=refresh_recent_days,
         auto_prepare=auto_prepare,
+        force_refresh_qlib=force_refresh_qlib,
     )
     return build_signal_snapshot(
         frame=frame,

@@ -45,19 +45,33 @@ def build_qlib_bin(
     qlib_repo: Optional[Path | str] = None,
     output_dir: Optional[Path | str] = None,
     clean: bool = False,
+    mode: str = "all",
 ) -> Path:
+    """构建 qlib .bin 数据集。
+
+    mode:
+      - "all":    全量重建（默认），对应 dump_bin.py dump_all
+      - "fix":    增量修复，只添加新标的，对应 dump_bin.py dump_fix
+      - "update": 增量更新，为已有标的追加新日期数据，对应 dump_bin.py dump_update
+    """
+    if mode not in ("all", "fix", "update"):
+        raise ValueError(f"不支持的模式：{mode}，可选 all / fix / update")
+
     script = resolve_dump_bin_script(qlib_repo)
     csv_dir = QLIB_CSV_EXPORT_DIR / dataset_name
     qlib_dir = Path(output_dir) if output_dir else (QLIB_DATA_DIR / dataset_name)
-    if clean:
+
+    if mode == "all" and clean:
         shutil.rmtree(qlib_dir, ignore_errors=True)
     qlib_dir.mkdir(parents=True, exist_ok=True)
+
+    fire_command = {"all": "dump_all", "fix": "dump_fix", "update": "dump_update"}[mode]
 
     subprocess.run(
         [
             sys.executable,
             str(script),
-            "dump_all",
+            fire_command,
             "--data_path",
             str(csv_dir),
             "--qlib_dir",

@@ -32,9 +32,6 @@ env/
 .DS_Store
 Thumbs.db
 
-# Tests — private, not open-source
-tests/
-
 # IDE
 .vscode/
 .idea/
@@ -43,8 +40,22 @@ tests/
 .claude/
 .claude/settings.local.json
 
+# SQLite WAL files (generated at runtime)
+data/market_data.sqlite3-wal
+data/market_data.sqlite3-shm
+
+# Logs
+*.log
+
 # Conda
 *.conda/
 .python-version
 .env
 .env.*
+
+# Jupyter
+.ipynb_checkpoints/
+
+# macOS additional
+*.dmg
+*.app

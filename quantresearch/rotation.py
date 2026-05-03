@@ -25,6 +25,7 @@ def prepare_rotation_dataset(
     refresh_recent_days: int = 14,
     qlib_repo: Path | str | None = None,
     output_dir: Path | str | None = None,
+    force_refresh_qlib: bool = False,
 ) -> Path:
     db = MarketDataDB(db_path)
     db.init_db()
@@ -46,6 +47,7 @@ def prepare_rotation_dataset(
         db_path=db_path,
         qlib_repo=qlib_repo,
         output_dir=output_dir,
+        force=force_refresh_qlib,
     )
 
 

@@ -30,6 +30,7 @@ def prepare_qlib_universe(
     qlib_repo: Path | str | None = None,
     output_dir: Path | str | None = None,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
 ) -> None:
     if auto_prepare:
         prepare_rotation_dataset(
@@ -41,6 +42,7 @@ def prepare_qlib_universe(
             refresh_recent_days=refresh_recent_days,
             qlib_repo=qlib_repo,
             output_dir=output_dir,
+            force_refresh_qlib=force_refresh_qlib,
         )
     init_qlib(dataset_name)
 
@@ -57,6 +59,7 @@ def qlib_data_health(
     qlib_repo: Path | str | None = None,
     output_dir: Path | str | None = None,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
     large_move_threshold: float = 0.15,
 ) -> pd.DataFrame:
     instruments = universe or DEFAULT_UNIVERSE
@@ -70,6 +73,7 @@ def qlib_data_health(
         qlib_repo=qlib_repo,
         output_dir=output_dir,
         auto_prepare=auto_prepare,
+        force_refresh_qlib=force_refresh_qlib,
     )
     frame = D.features(
         instruments,
@@ -120,6 +124,7 @@ def qlib_feature_preview(
     qlib_repo: Path | str | None = None,
     output_dir: Path | str | None = None,
     auto_prepare: bool = True,
+    force_refresh_qlib: bool = False,
     rows: int = 20,
 ) -> pd.DataFrame:
     instruments = universe or DEFAULT_UNIVERSE
@@ -134,6 +139,7 @@ def qlib_feature_preview(
         qlib_repo=qlib_repo,
         output_dir=output_dir,
         auto_prepare=auto_prepare,
+        force_refresh_qlib=force_refresh_qlib,
     )
     frame = D.features(instruments, list(expr_map.values()), start_time=start, end_time=end)
     if frame.empty:
