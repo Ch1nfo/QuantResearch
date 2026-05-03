@@ -9,7 +9,7 @@
 [![Backtest](https://img.shields.io/badge/backtest-vectorbt-9cf.svg)](https://github.com/polakowo/vectorbt)
 [![Workflow](https://img.shields.io/badge/workflow-Claude%20Code-black.svg)](#)
 
-[中文文档](README_ZH.md) | English
+English | [中文](README_ZH.md)
 
 ---
 
