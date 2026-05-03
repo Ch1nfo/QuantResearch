@@ -1,0 +1,22 @@
+# Core data pipeline
+akshare>=1.12
+yfinance>=0.2
+akracer>=0.0.14       # Apple Silicon fix for akshare
+
+# Optional: 通达信备用数据源 & 分钟K线
+mootdx>=0.11
+
+# qlib ecosystem
+pyqlib>=0.9           # pip install pyqlib
+numpy>=1.26
+pandas>=2.0
+
+# Backtesting
+vectorbt>=0.5
+
+# Visualization
+mplfinance>=0.12
+matplotlib>=3.8
+
+# Utilities
+pywencai>=0.3         # 问财搜索（可选）

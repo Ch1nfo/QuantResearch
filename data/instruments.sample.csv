@@ -1,0 +1,6 @@
+symbol,market,asset_type,name,currency,exchange,list_date,delist_date,status,has_real_factor
+HSTECH,HK,INDEX,恒生科技指数,HKD,HK,,,ACTIVE,0
+000510,CN,INDEX,中证A500指数,CNY,CSI,,,ACTIVE,0
+000300,CN,INDEX,沪深300指数,CNY,CSI,,,ACTIVE,0
+NDX,US,INDEX,纳斯达克100指数,USD,INDEX,,,ACTIVE,0
+GSPC,US,INDEX,标普500指数,USD,INDEX,,,ACTIVE,0

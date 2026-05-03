@@ -1,0 +1,50 @@
+# Data — user-specific, never commit
+data/market_data.sqlite3
+data/exports/
+data/qlib_data/
+data/qlib_records/
+data/reference/*.csv
+data/reference/*.json
+
+# Reports — user-generated outputs
+reports/*.md
+reports/*.json
+reports/charts/
+reports/decisions/
+reports/signals/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests — private, not open-source
+tests/
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code — user-specific settings
+.claude/
+.claude/settings.local.json
+
+# Conda
+*.conda/
+.python-version
+.env
+.env.*
